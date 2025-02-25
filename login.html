@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン</title>
+    <style>
+        body {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            width: 100%;
+            max-width: 200px; /* 最大幅を200pxに設定 */
+            margin-bottom: 20px; /* 下に余白を追加 */
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+<body>
+    <img src="images/GOLF.png" alt="ロゴ"　class=logo>
+    <div class="login-container"></div>
+    <h2>ログイン</h2>
+    <form id="loginForm">
+        <label for="email">メールアドレス：</label>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="password">パスワード：</label>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <!-- 仮ユーザー情報をローカルストレージに保存 -->
+    <script>
+        // 仮ユーザー情報（ログイン用）
+        const initialUser = {
+            name: "石田真梨奈",          // ユーザー名
+            email: "marina@example.com", // メールアドレス
+            password: "password123"     // パスワード
+        };
+
+        // 初期ユーザー情報をlocalStorageに保存
+        localStorage.setItem('user', JSON.stringify(initialUser));
+    </script>
+
+    <script>
+        // ログインフォームの送信時
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // localStorageから仮のユーザー情報を取得
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+
+            // 入力されたメールとパスワードが正しいか確認
+            if (storedUser && storedUser.email === email && storedUser.password === password) {
+                // ログイン成功
+                localStorage.setItem('loggedIn', 'true');
+                window.location.href = "reservation.html"; // 予約ページへ遷移
+            } else {
+                alert('メールアドレスまたはパスワードが間違っています');
+            }
+        });
+    </script>
+</body>
+</html>
