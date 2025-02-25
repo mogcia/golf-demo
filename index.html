@@ -127,53 +127,47 @@
 
   <!-- 予約表 -->
   <table>
-    <thead>
-        <tr>
-            <th>時間</th>
-            <th colspan="4">OUTスタート①</th>
-            <th colspan="4">OUTスタート②</th>
-            <th colspan="4">INスタート①</th>
-            <th colspan="4">INスタート②</th>
-        </tr>
-    </thead>
-    <tbody id="schedule">
-        <!-- JavaScriptで時間枠を自動生成 -->
-    </tbody>
-</table>
-
+        <thead>
+            <tr>
+                <th>時間</th>
+                <th colspan="4">OUTスタート</th>
+                <th colspan="4">INスタート</th>
+            </tr>
+        </thead>
+        <tbody id="schedule">
+            <!-- JavaScriptで時間枠を自動生成 -->
+        </tbody>
+    </table>    
 
 <script>
-   const scheduleTable = document.getElementById("schedule");
+    const scheduleTable = document.getElementById("schedule");
     const dateInput = document.getElementById("date");
 
     const STORAGE_KEY = "golf_reservation_data";
 
-    // 予約データを取得（選択した日付ごとに管理）
     function loadReservations(date) {
         let savedData = localStorage.getItem(STORAGE_KEY);
         let allReservations = savedData ? JSON.parse(savedData) : {};
-        return allReservations[date] || {}; // 指定した日付のデータを取得
+        return allReservations[date] || {}; 
     }
 
-    // 予約データを保存（選択した日付ごと）
     function saveReservations(date, data) {
         let savedData = localStorage.getItem(STORAGE_KEY);
         let allReservations = savedData ? JSON.parse(savedData) : {};
-        allReservations[date] = data; // 選択した日付のデータを保存
+        allReservations[date] = data;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(allReservations));
     }
 
-    // 予約表を作成（選択された日付のデータを反映）
     function generateSchedule() {
         scheduleTable.innerHTML = ""; 
-        let selectedDate = dateInput.value || getToday(); // デフォルトは今日の日付
+        let selectedDate = dateInput.value || getToday();
         let reservations = loadReservations(selectedDate);
 
-        const startTime = 8 * 60 + 30;
-        const endTime = 11 * 60;
-        const slots = ["OUT1", "OUT2", "IN1", "IN2"]; // 4組
+        const startTime = 7 * 60 + 45; // 7:45
+        const endTime = 10 * 60 + 45; // 10:45
+        const slots = ["OUT", "IN"]; // 2組（OUT, IN）
 
-        for (let time = startTime; time <= endTime; time += 15) {
+        for (let time = startTime; time <= endTime; time += 8) { // 8分刻み
             let hour = Math.floor(time / 60);
             let minute = time % 60;
             let timeText = hour.toString().padStart(2, '0') + ":" + minute.toString().padStart(2, '0');
@@ -182,7 +176,7 @@
             row.innerHTML = `<td>${timeText}</td>`;
 
             slots.forEach(slot => {
-                for (let i = 1; i <= 4; i++) { // 4人分の枠
+                for (let i = 1; i <= 4; i++) { // 1組4人まで
                     let key = `${timeText}-${slot}-${i}`;
                     row.innerHTML += `
                         <td class="${reservations[key] ? 'unavailable' : 'available'}"
@@ -197,17 +191,16 @@
         }
     }
 
-    // 予約を切り替える（1人ずつ予約 or キャンセル）
     function toggleReservation(cell, key, date) {
         let reservations = loadReservations(date);
 
         if (reservations[key]) {
-            delete reservations[key]; // 予約解除
+            delete reservations[key];
             cell.classList.remove("unavailable");
             cell.classList.add("available");
             cell.textContent = "◯";
         } else {
-            reservations[key] = true; // 予約
+            reservations[key] = true;
             cell.classList.remove("available");
             cell.classList.add("unavailable");
             cell.textContent = "✕";
@@ -216,7 +209,6 @@
         saveReservations(date, reservations);
     }
 
-    // 今日の日付を取得（YYYY-MM-DD形式）
     function getToday() {
         let today = new Date();
         let yyyy = today.getFullYear();
@@ -225,17 +217,9 @@
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    // 日付を変更したら予約表を更新
     dateInput.addEventListener("change", generateSchedule);
 
-    // ページ読み込み時に日付をセット & スケジュールを生成
     dateInput.value = getToday();
-    generateSchedule();
-</script>
-
-
-
-    // ページ読み込み時にスケジュールを生成
     generateSchedule();
 </script>
 
