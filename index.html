@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゴルフ場予約システム</title>
+    <style>
+    /* 全体のスタイル */
+    body {
+        font-family: 'Arial', sans-serif;
+        text-align: center;
+        background-color: #2c2c2c; /* ダークグレー */
+        color: #d4af37; /* ゴールド */
+        margin: 0;
+        padding: 20px;
+    }
+
+    /* ヘッダー */
+    h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #d4af37; /* ゴールドのライン */
+        display: inline-block;
+        padding-bottom: 5px;
+    }
+
+    /* 日付 & ゴルフ場名 */
+    .controls {
+        margin: 20px 0;
+        font-size: 18px;
+    }
+
+    #golf-course-name {
+        font-weight: bold;
+        color: #d4af37;
+        margin-left: 15px;
+        font-size: 20px;
+    }
+
+    /* 表のスタイル */
+    table {
+        width: 90%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        background: #222222; /* 黒 */
+        color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    th, td {
+        border: 1px solid #d4af37; /* ゴールドの枠線 */
+        padding: 12px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #444444; /* 濃いグレー */
+        color: #d4af37; /* ゴールド */
+        font-size: 18px;
+    }
+
+    /* 予約枠 */
+    .available {
+        background-color: #333; /* ブラック　*/
+        color: #d4af37;
+        border: 2px solid #d4af37; /* ゴールドの枠 */
+        cursor: pointer;
+        font-size: 18px;
+        border-radius: 5px;
+    }
+
+    .available:hover {
+        background-color: #d4af37; /* ゴールド */
+        color: #1b3a2b;
+    }
+
+    .unavailable {
+        background-color: #555555; /* ダークグレー（高級感） */
+        color: #dddddd;
+        border: 2px solid #aaaaaa;
+        cursor: pointer;
+        font-size: 18px;
+        border-radius: 5px;
+    }
+
+    /* リセットボタン */
+    .reset-btn {
+        background-color: #d4af37;
+        color: #1b3a2b;
+        font-size: 18px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+        font-weight: bold;
+    }
+
+    .reset-btn:hover {
+        background-color: #f5d76e;
+    }
+    </style>
+</head>
+<body>
+
+    <h1>ゴルフ場予約システム（デモ）</h1>
+
+  <!-- 日付選択 & 人数選択 -->
+  <label for="date">日付を選択：</label>
+  <input type="date" id="date">
+  
+  <label for="players">人数を選択：</label>
+  <select id="players">
+      <option value="1">1名</option>
+      <option value="2">2名</option>
+      <option value="3">3名</option>
+      <option value="4">4名</option>
+  </select>
+
+  <!-- 日付選択 & ゴルフ場名 -->
+<div class="controls">
+    <span id="golf-course-name">日の隈ゴルフ</span>
+</div>
+
+
+  <!-- 予約表 -->
+  <table>
+    <thead>
+        <tr>
+            <th>時間</th>
+            <th colspan="4">OUTスタート①</th>
+            <th colspan="4">OUTスタート②</th>
+            <th colspan="4">INスタート①</th>
+            <th colspan="4">INスタート②</th>
+        </tr>
+    </thead>
+    <tbody id="schedule">
+        <!-- JavaScriptで時間枠を自動生成 -->
+    </tbody>
+</table>
+
+
+<script>
+   const scheduleTable = document.getElementById("schedule");
+    const dateInput = document.getElementById("date");
+
+    const STORAGE_KEY = "golf_reservation_data";
+
+    // 予約データを取得（選択した日付ごとに管理）
+    function loadReservations(date) {
+        let savedData = localStorage.getItem(STORAGE_KEY);
+        let allReservations = savedData ? JSON.parse(savedData) : {};
+        return allReservations[date] || {}; // 指定した日付のデータを取得
+    }
+
+    // 予約データを保存（選択した日付ごと）
+    function saveReservations(date, data) {
+        let savedData = localStorage.getItem(STORAGE_KEY);
+        let allReservations = savedData ? JSON.parse(savedData) : {};
+        allReservations[date] = data; // 選択した日付のデータを保存
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allReservations));
+    }
+
+    // 予約表を作成（選択された日付のデータを反映）
+    function generateSchedule() {
+        scheduleTable.innerHTML = ""; 
+        let selectedDate = dateInput.value || getToday(); // デフォルトは今日の日付
+        let reservations = loadReservations(selectedDate);
+
+        const startTime = 8 * 60 + 30;
+        const endTime = 11 * 60;
+        const slots = ["OUT1", "OUT2", "IN1", "IN2"]; // 4組
+
+        for (let time = startTime; time <= endTime; time += 15) {
+            let hour = Math.floor(time / 60);
+            let minute = time % 60;
+            let timeText = hour.toString().padStart(2, '0') + ":" + minute.toString().padStart(2, '0');
+
+            let row = document.createElement("tr");
+            row.innerHTML = `<td>${timeText}</td>`;
+
+            slots.forEach(slot => {
+                for (let i = 1; i <= 4; i++) { // 4人分の枠
+                    let key = `${timeText}-${slot}-${i}`;
+                    row.innerHTML += `
+                        <td class="${reservations[key] ? 'unavailable' : 'available'}"
+                            onclick="toggleReservation(this, '${key}', '${selectedDate}')">
+                            ${reservations[key] ? '✕' : '◯'}
+                        </td>
+                    `;
+                }
+            });
+
+            scheduleTable.appendChild(row);
+        }
+    }
+
+    // 予約を切り替える（1人ずつ予約 or キャンセル）
+    function toggleReservation(cell, key, date) {
+        let reservations = loadReservations(date);
+
+        if (reservations[key]) {
+            delete reservations[key]; // 予約解除
+            cell.classList.remove("unavailable");
+            cell.classList.add("available");
+            cell.textContent = "◯";
+        } else {
+            reservations[key] = true; // 予約
+            cell.classList.remove("available");
+            cell.classList.add("unavailable");
+            cell.textContent = "✕";
+        }
+
+        saveReservations(date, reservations);
+    }
+
+    // 今日の日付を取得（YYYY-MM-DD形式）
+    function getToday() {
+        let today = new Date();
+        let yyyy = today.getFullYear();
+        let mm = String(today.getMonth() + 1).padStart(2, '0');
+        let dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 日付を変更したら予約表を更新
+    dateInput.addEventListener("change", generateSchedule);
+
+    // ページ読み込み時に日付をセット & スケジュールを生成
+    dateInput.value = getToday();
+    generateSchedule();
+</script>
+
+
+
+    // ページ読み込み時にスケジュールを生成
+    generateSchedule();
+</script>
+
+      // JavaScriptで時間枠を自動生成
+      const scheduleTable = document.getElementById("schedule");
+      const startTime = 8 * 60 + 30; // 8:30を分に変換
+      const endTime = 11 * 60; // 11:00を分に変換
+
+      for (let time = startTime; time <= endTime; time += 15) {
+          let hour = Math.floor(time / 60);
+          let minute = time % 60;
+          let timeText = hour.toString().padStart(2, '0') + ":" + minute.toString().padStart(2, '0');
+
+          let row = document.createElement("tr");
+          row.innerHTML = `
+              <td>${timeText}</td>
+              <td class="available">◯</td>
+              <td class="available">◯</td>
+          `;
+          scheduleTable.appendChild(row);
+      }
+  </script>
+  <div class="controls">
+    <button class="reset-btn" onclick="resetReservations()">すべての予約をリセット</button>
+</div>
+</body>
+</html>
